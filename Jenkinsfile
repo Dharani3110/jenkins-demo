@@ -25,10 +25,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-		   sudo usermod -aG docker jenkins
-		   sudo systemctl restart docker
-		   sudo systemctl restart jenkins
-		   docker build -t jenkins-demo:v1 .'
+		sudo usermod -aG docker jenkins
+		sudo systemctl restart docker
+		sudo systemctl restart jenkins
+		docker build -t jenkins-demo:v1 .'
             }
         }
 
