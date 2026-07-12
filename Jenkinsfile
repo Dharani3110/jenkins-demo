@@ -24,23 +24,18 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-		sudo usermod -aG docker jenkins
-		sudo systemctl restart docker
-		sudo systemctl restart jenkins
-		docker build -t jenkins-demo:v1 .'
+                sh 'docker build -t jenkins-demo:v1 .'
             }
         }
 
         stage('Run Docker Container') {
             steps {
                 sh '''
-                docker rm -f demo 2>/dev/null || true
-                docker run -d --name demo jenkins-demo:v1
+                    docker rm -f demo 2>/dev/null || true
+                    docker run -d --name demo jenkins-demo:v1
                 '''
             }
         }
 
     }
-
 }
