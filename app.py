@@ -1,1 +1,1 @@
-print("GD!!")
+print("Is it solved??")
