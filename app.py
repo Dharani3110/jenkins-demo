@@ -1,1 +1,1 @@
-print("Check OKKKK!")
+print("GD!!")
