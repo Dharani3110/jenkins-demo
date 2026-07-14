@@ -10,19 +10,27 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
+        stage('Setup Python Environment') {
             steps {
-                checkout scm
+                sh '''
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'python3 test.py'
+                sh '''
+                    . venv/bin/activate
+                    python3 test.py
+                '''
             }
         }
 
-        stage('Build Image') {
+        stage('Build Docker Image') {
             steps {
                 sh '''
                     docker build \
@@ -36,20 +44,20 @@ pipeline {
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'USER',
-                        passwordVariable: 'PASS'
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
                     sh '''
-                        echo "$PASS" | docker login \
-                        -u "$USER" \
+                        echo "$DOCKER_PASS" | docker login \
+                        -u "$DOCKER_USER" \
                         --password-stdin
                     '''
                 }
             }
         }
 
-        stage('Push Image') {
+        stage('Push Docker Image') {
             steps {
                 sh '''
                     docker push $IMAGE_NAME:$BUILD_NUMBER
@@ -57,34 +65,41 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-
+        stage('Deploy to EC2') {
             steps {
-
                 sshagent(credentials: ['ec2-ssh-key']) {
-
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST << EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST << EOF
 
-                    docker pull $IMAGE_NAME:$BUILD_NUMBER
+                        docker pull $IMAGE_NAME:$BUILD_NUMBER
 
-                    docker stop $CONTAINER_NAME || true
+                        docker stop $CONTAINER_NAME || true
+                        docker rm $CONTAINER_NAME || true
 
-                    docker rm $CONTAINER_NAME || true
+                        docker run -d \
+                            --name $CONTAINER_NAME \
+                            -p 5000:5000 \
+                            $IMAGE_NAME:$BUILD_NUMBER
 
-                    docker run -d \
-                        --name $CONTAINER_NAME \
-                        -p 5000:5000 \
-                        $IMAGE_NAME:$BUILD_NUMBER
-
-                    EOF
+                        EOF
                     '''
                 }
-
             }
-
         }
-
     }
 
+    post {
+        success {
+            echo "Deployment Successful!"
+        }
+
+        failure {
+            echo "Pipeline Failed!"
+        }
+
+        always {
+            sh 'docker logout || true'
+            sh 'rm -rf venv || true'
+        }
+    }
 }
