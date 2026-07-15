@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: flask-app
+
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: flask
+
+  template:
+    metadata:
+      labels:
+        app: flask
+
+    spec:
+      containers:
+      - name: flask-container
+        image: dharani3110/jenkins-demo:latest
+
+        ports:
+        - containerPort: 5000
+
+        imagePullPolicy: Always
