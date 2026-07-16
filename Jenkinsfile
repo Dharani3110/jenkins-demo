@@ -5,6 +5,7 @@ pipeline {
     environment {
 
         IMAGE = "dharani3110/jenkins-demo"
+        KUBECONFIG = "/var/lib/jenkins/.kube/config"
 
     }
 
@@ -89,23 +90,15 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-
-            steps {
-
-                withCredentials([
-                    file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')
-                ]) {
-
-                    sh '''
-
-                    kubectl set image deployment/flask-app \
+ 	    steps {
+      		sh '''
+            	    kubectl set image deployment/flask-app \
                     flask-container=$IMAGE:$BUILD_NUMBER
 
                     kubectl rollout status deployment/flask-app
-
-                    '''
-
-                }
+                   '''
+                  }
+               }
 
             }
 
