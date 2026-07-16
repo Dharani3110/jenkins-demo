@@ -19,9 +19,8 @@ spec:
     spec:
       containers:
       - name: flask-container
-        image: dharani3110/jenkins-demo:latest
+        image: dharani3110/jenkins-demo:IMAGE_TAG
+        imagePullPolicy: Always
 
         ports:
         - containerPort: 5000
-
-        imagePullPolicy: Always

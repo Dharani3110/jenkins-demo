@@ -75,8 +75,8 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                    kubectl set image deployment/flask-app \
-                    flask-container=$IMAGE:$BUILD_NUMBER
+                    sed -i "s|IMAGE_TAG|${BUILD_NUMBER}|g" kubernetes/deployment.yaml
+		    kubectl apply -f kubernetes/
 
                     kubectl rollout status deployment/flask-app
                 '''
